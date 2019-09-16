@@ -40,7 +40,7 @@ def _log_format(x):
     return ['%({})'.format(i) for i in x]
 
 
-def setup(log, path=None, log_level=logging.INFO, json_logging=True,
+def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
           supported_keys=None):
     """
     Setup logging.Logger handlers and formatters. If `json_logging` is set to
@@ -85,7 +85,7 @@ def setup(log, path=None, log_level=logging.INFO, json_logging=True,
                     }
 
     Args:
-        log (logging.Logger): A Logger instance to setup.
+        logger (logging.Logger): A Logger instance to setup. Default to None.
         path (str, optional): A path to a file to use for logging. Argument
             supports Formatter with default values for hostname and filename.
             If value is None, use sys.stdout for logging. Defaults to None.
@@ -99,8 +99,10 @@ def setup(log, path=None, log_level=logging.INFO, json_logging=True,
         logging.Logger: The first argument (logger) after setup.
     """
     supported_keys = supported_keys or SUPPORTED_KEYS
+    if logger is None:
+        logger = logging.getLogger()
 
-    log.setLevel(log_level)
+    logger.setLevel(log_level)
 
     if path is None:
         handler = logging.StreamHandler(sys.stdout)
@@ -118,5 +120,5 @@ def setup(log, path=None, log_level=logging.INFO, json_logging=True,
             "(%(process)d): %(message)s")
 
     handler.setFormatter(formatter)
-    log.addHandler(handler)
-    return log
+    logger.addHandler(handler)
+    return logger
