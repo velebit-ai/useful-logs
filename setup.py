@@ -8,16 +8,16 @@ with open('requirements.txt') as f:
 setup(
     name="useful-logs",
     version=__version__,  # noqa
-    description="Useful packages",
+    description="Module for standardized logs across services",
     classifiers=[
-        "Licence :: Other/Proprietary Licence",
+        "License :: OSI Approved :: MIT License",
 
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6"
     ],
-    url="https://gitlab.com/velebit/useful/logs",
-    author="Velebit",
-    author_email="dev@velebit.ai",
+    url="https://github.com/velebit-ai/useful-logs",
+    author="Velebit AI",
+    author_email="contact@velebit.ai",
     packages=["useful.logs"],
     install_requires=requirements,
     include_package_data=True

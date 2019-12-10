@@ -85,7 +85,7 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
                     }
 
     Args:
-        logger (logging.Logger): A Logger instance to setup. Default to None.
+        logger (logging.Logger): A Logger instance to setup. Defaults to None.
         path (str, optional): A path to a file to use for logging. Argument
             supports Formatter with default values for hostname and filename.
             If value is None, use sys.stdout for logging. Defaults to None.
