@@ -40,6 +40,17 @@ def _log_format(x):
     return ['%({})'.format(i) for i in x]
 
 
+class AddSrcJsonFormatter(jsonlogger.JsonFormatter):
+    """
+    A custom JsonFormatter implementation that adds {"src": "python"} to
+    JSON log.
+    """
+    def add_fields(self, log_record, record, message_dict):
+        super().add_fields(log_record, record, message_dict)
+        # add {"src": "python"} to log record
+        log_record["src"] = "python"
+
+
 def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
           supported_keys=None):
     """
@@ -113,7 +124,7 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
 
     if json_logging:
         custom_format = ' '.join(_log_format(supported_keys))
-        formatter = jsonlogger.JsonFormatter(custom_format)
+        formatter = AddSrcJsonFormatter(custom_format)
     else:
         formatter = logging.Formatter(
             "%(asctime)s [%(levelname)s] %(pathname)s:%(lineno)d "
