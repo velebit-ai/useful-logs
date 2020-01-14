@@ -4,6 +4,8 @@ import sys
 
 from pythonjsonlogger import jsonlogger
 
+from useful.logs._context import context
+
 # Default json logging values. Everything except message is set automatically
 SUPPORTED_KEYS = [
     'asctime',
@@ -40,7 +42,7 @@ def _log_format(x):
     return ['%({})'.format(i) for i in x]
 
 
-class AddSrcJsonFormatter(jsonlogger.JsonFormatter):
+class ContextualJsonFormatter(jsonlogger.JsonFormatter):
     """
     A custom JsonFormatter implementation that adds {"src": "python"} to
     JSON log.
@@ -49,6 +51,9 @@ class AddSrcJsonFormatter(jsonlogger.JsonFormatter):
         super().add_fields(log_record, record, message_dict)
         # add {"src": "python"} to log record
         log_record["src"] = "python"
+        # add log values from the useful.logs.context
+        for key, value in context.__dict__.items():
+            log_record[key] = value
 
 
 def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
@@ -124,7 +129,7 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
 
     if json_logging:
         custom_format = ' '.join(_log_format(supported_keys))
-        formatter = AddSrcJsonFormatter(custom_format)
+        formatter = ContextualJsonFormatter(custom_format)
     else:
         formatter = logging.Formatter(
             "%(asctime)s [%(levelname)s] %(pathname)s:%(lineno)d "
