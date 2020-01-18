@@ -1,8 +1,12 @@
 import logging
 import platform
 import sys
+import threading
 
 from useful.logs._json_logging import JSONFormatter
+from useful.logs.exception_hooks import except_logging
+from useful.logs.exception_hooks import unraisable_logging
+from useful.logs.exception_hooks import threading_except_logging
 
 # default JSONFormatter fields
 JSON_FIELDS = {
@@ -64,4 +68,16 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+    # log uncaught exceptions using this logger configuration. This way we can
+    # have every important python output in JSON format without the need for
+    # multiline parsing afterwards
+    sys.excepthook = except_logging
+    sys.unraisablehook = unraisable_logging
+    # Note: threading.excepthook is only supported since Python 3.8
+    if sys.version_info >= (3, 8, 0):
+        threading.excepthook = threading_except_logging
+    # Note: multiprocessing.Process still doesn't use sys.excepthook, so in
+    # order to make it work, you need to implement a custom Process and
+    # override Process.run method to make the old stdio output obsolete, catch
+    # all exceptions and call sys.excepthook on them
     return logger
