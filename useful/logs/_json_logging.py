@@ -1,6 +1,8 @@
 import json
 import logging
 
+from useful.logs._context import context
+
 # a set of standard LogRecord attributes to be used when building JSON logs
 LOG_RECORD_ATTRIBUTES = {
     'args', 'asctime', 'created', 'exc_info', 'exc_text', 'filename',
@@ -86,5 +88,8 @@ class JSONFormatter(logging.Formatter):
                 continue
 
             data[field] = value
+
+        # add the data from useful.logs.context
+        data = {**data, **context.__dict__}
 
         return json.dumps(data)
