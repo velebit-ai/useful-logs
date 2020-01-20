@@ -17,7 +17,8 @@ JSON_FIELDS = {
     "process_name": "processName",
     "thread": "thread",
     "thread_name": "threadName",
-    "traceback": "exc_text"
+    "traceback": "exc_text",
+    "__htime": "asctime"
 }
 
 
@@ -59,7 +60,8 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
 
     if json_logging:
         formatter = JSONFormatter(fields=json_fields,
-                                  always_extra={"source": "python"})
+                                  always_extra={"source": "python"},
+                                  datefmt="%Y-%m-%dT%H:%M:%SZ")
     else:
         formatter = logging.Formatter(
             "%(asctime)s [%(levelname)s] %(pathname)s:%(lineno)d "
