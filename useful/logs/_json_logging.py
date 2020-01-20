@@ -31,13 +31,15 @@ class JSONFormatter(logging.Formatter):
         """
         super().__init__(fmt=None, datefmt=datefmt, style='%')
         self.fields = fields or {}
+        self._uses_time = "asctime" in self.fields.values()
         self.always_extra = always_extra or {}
 
     def usesTime(self):
         """
-        Check if the format uses the creation time of the record.
+        Check if the format uses the creation time of the record. For more
+        information about the method see logging.Formatter.
         """
-        return "asctime" in self.fields
+        return self._uses_time
 
     def format(self, record):
         """
