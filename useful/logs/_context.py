@@ -1,5 +1,6 @@
 import threading
 
+
 class _Context(threading.local):
     """
     threading.local with additional methods for saving and restoring state.
@@ -27,7 +28,7 @@ class _Context(threading.local):
         """
         Remove all data stored in _Context.
         """
-        for key in self.__dict__.keys():
+        for key in list(self.__dict__.keys()):
             delattr(self, key)
 
 

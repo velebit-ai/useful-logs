@@ -1,104 +1,34 @@
 import logging
 import platform
 import sys
+import threading
 
-from pythonjsonlogger import jsonlogger
+from useful.logs._json_logging import JSONFormatter
+from useful.logs.exception_hooks import except_logging
+from useful.logs.exception_hooks import unraisable_logging
+from useful.logs.exception_hooks import threading_except_logging
 
-from useful.logs._context import context
-
-# Default json logging values. Everything except message is set automatically
-SUPPORTED_KEYS = [
-    'asctime',
-    'created',
-    'filename',
-    'funcName',
-    'levelname',
-    'levelno',
-    'lineno',
-    'module',
-    'msecs',
-    'message',
-    'name',
-    'pathname',
-    'process',
-    'processName',
-    'relativeCreated',
-    'thread',
-    'threadName'
-]
-
-
-def _log_format(x):
-    """
-    Take an iterable of strings and convert them into a logging formatter
-    compatible format: %(variable_name)
-
-    Args:
-        x ([str]): An iterable of strings to format
-
-    Returns:
-        [str]: A list of formatted strings
-    """
-    return ['%({})'.format(i) for i in x]
-
-
-class ContextualJsonFormatter(jsonlogger.JsonFormatter):
-    """
-    A custom JsonFormatter implementation that adds {"src": "python"} to
-    JSON log.
-    """
-    def add_fields(self, log_record, record, message_dict):
-        super().add_fields(log_record, record, message_dict)
-        # add {"src": "python"} to log record
-        log_record["src"] = "python"
-        # add log values from the useful.logs.context
-        for key, value in context.__dict__.items():
-            log_record[key] = value
+# default JSONFormatter fields
+JSON_FIELDS = {
+    "message": "message",
+    "time": "created",
+    "log_level": "levelname",
+    "process": "process",
+    "process_name": "processName",
+    "thread": "thread",
+    "thread_name": "threadName",
+    "traceback": "exc_text",
+    "__htime": "asctime"
+}
 
 
 def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
-          supported_keys=None):
+          json_fields=None):
     """
     Setup logging.Logger handlers and formatters. If `json_logging` is set to
-    `True`, use json formatting per single message, otherwise use regular
-    formatting.
-
-    If `json_logging=True`, when running `logger.info(msg, extra={...})`, `msg`
-    is parsed as key `"message"`, and everything in dict provided as `extra` is
-    added to the final log. This provides a simple way to add custom metrics to
-    logs.
-
-    Note:
-        The important thing to notice is that every key from supported_keys
-        (or SUPPORTED_KEYS as default) except `"message"` is filled
-        automatically, and these keys **must** not be overriden in `extra`.
-        When calling
-
-            `logger.info("testing", extra={"app": "AppName", "metric": 1.2})`
-
-        we get a json in form of:
-
-                    {
-                        "asctime": "2019-08-22 11:09:33,805",
-                        "created": 1566464973.8052688,
-                        "filename": "main.py",
-                        "funcName": "<module>",
-                        "levelname": "INFO",
-                        "levelno": 20,
-                        "lineno": 8,
-                        "module": "main",
-                        "msecs": 805.2687644958496,
-                        "message": "testing",
-                        "name": "root",
-                        "pathname": "/path/to/main.py",
-                        "process": 32621,
-                        "processName": "MainProcess",
-                        "relativeCreated": 35.19701957702637,
-                        "thread": 139825143863104,
-                        "threadName": "MainThread",
-                        "app": "AppName",
-                        "metric": 1.2
-                    }
+    `True`, use custom JSONFormatter, otherwise use regular formatting.
+    JSONFormatter supports provides a simple way to write log message, standard
+    LogRecord values along with extra keys provided when writing logs.
 
     Args:
         logger (logging.Logger): A Logger instance to setup. Defaults to None.
@@ -108,13 +38,14 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
         log_level (int, optional): Set logging level. Defaults to logging.INFO.
         json_logging (boolean, optional): JSON logging format usage indicator.
             Defaults to True.
-        supported_keys (list, optional): set json logging supported keys.
-            Defaults to None, which uses SUPPORTED_KEYS.
+        json_fields (dict, optional): A dictionary specifying JSONFormatter
+            log form. For more details check the documentation of the
+            formatter. Defaults to None, which is interpreted as JSON_FIELDS
 
     Returns:
         logging.Logger: The first argument (logger) after setup.
     """
-    supported_keys = supported_keys or SUPPORTED_KEYS
+    json_fields = json_fields or JSON_FIELDS
     if logger is None:
         logger = logging.getLogger()
 
@@ -128,8 +59,9 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
         handler = logging.FileHandler(path)
 
     if json_logging:
-        custom_format = ' '.join(_log_format(supported_keys))
-        formatter = ContextualJsonFormatter(custom_format)
+        formatter = JSONFormatter(fields=json_fields,
+                                  always_extra={"source": "python"},
+                                  datefmt="%Y-%m-%dT%H:%M:%SZ")
     else:
         formatter = logging.Formatter(
             "%(asctime)s [%(levelname)s] %(pathname)s:%(lineno)d "
@@ -137,4 +69,17 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
 
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+    # log uncaught exceptions using this logger configuration. This way we can
+    # have every important python output in JSON format without the need for
+    # multiline parsing afterwards
+    sys.excepthook = except_logging
+    sys.unraisablehook = unraisable_logging
+    # Note: threading.excepthook is only supported since Python 3.8
+    if sys.version_info >= (3, 8, 0):
+        threading.excepthook = threading_except_logging
+    # Note: multiprocessing.Process still doesn't use sys.excepthook, so in
+    # order to make it work, you need to implement a custom Process and
+    # override Process.run method to make the old stdio output obsolete, catch
+    # all exceptions and call sys.excepthook on them
     return logger
