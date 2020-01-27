@@ -1,4 +1,7 @@
+import logging
 import threading
+
+log = logging.getLogger(__name__)
 
 
 class _Context(threading.local):
@@ -17,10 +20,13 @@ class _Context(threading.local):
 
     def load_state_from_dict(self, dictionary):
         """
-        Basically set self.__dict__ = dictionary.
+        Append the data from dictionary to self.__dict__
         """
-        # Work only with empty _Context objects
-        assert not self.__dict__
+        # _Context object should be empty
+        if self.__dict__:
+            log.warning("useful.logs.context should be empty before loading a "
+                        "new state into it",
+                        extra={"current_state": self.__dict__})
         for key, value in dictionary.items():
             self.__setattr__(key, value)
 
