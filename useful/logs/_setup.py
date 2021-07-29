@@ -21,9 +21,13 @@ JSON_FIELDS = {
     "__htime": "asctime"
 }
 
+ALWAYS_EXTRA = {
+   "source": "python"
+}
+
 
 def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
-          json_fields=None):
+          json_fields=None, always_extra=None):
     """
     Setup logging.Logger handlers and formatters. If `json_logging` is set to
     `True`, use custom JSONFormatter, otherwise use regular formatting.
@@ -41,11 +45,14 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
         json_fields (dict, optional): A dictionary specifying JSONFormatter
             log form. For more details check the documentation of the
             formatter. Defaults to None, which is interpreted as JSON_FIELDS
+        always_extra (dict, optional): A dictionary specifying extra static
+             values to always include.
 
     Returns:
         logging.Logger: The first argument (logger) after setup.
     """
     json_fields = json_fields or JSON_FIELDS
+    always_extra = always_extra or ALWAYS_EXTRA
     if logger is None:
         logger = logging.getLogger()
 
@@ -60,7 +67,7 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
 
     if json_logging:
         formatter = JSONFormatter(fields=json_fields,
-                                  always_extra={"source": "python"},
+                                  always_extra=always_extra,
                                   datefmt="%Y-%m-%dT%H:%M:%SZ")
     else:
         formatter = logging.Formatter(
