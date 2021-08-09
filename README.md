@@ -1,5 +1,7 @@
 # useful-logs
 
+## usage
+
 A simple function for Python logging setup. Using this allows for the consistent log format across multiple programs, which is very convenient when using microservice architecture. Usage is quite simple, with `useful.logs.setup` requiring only a single call, presumably from the `main` script, for example
 
 ```python
@@ -30,3 +32,9 @@ def test():
 When argument `extra` is provided with `JSON` logging enabled, all of the values provided are logged together with timestamps and log message in a `JSON` log.
 
 With this approach you can even have some level of control over log format from other Python modules you do not maintain yourself.
+
+## instalation
+
+```sh
+pip install velebit-useful-logs
+```
