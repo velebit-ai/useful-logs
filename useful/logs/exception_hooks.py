@@ -35,7 +35,7 @@ def threading_except_logging(args):
                 exception, can be None. Defaults to None
     """
     exc_type, exc_value, exc_traceback, _ = args
-    logging.error("Uncaught exception",
+    logging.error("Uncaught threading exception",
                   exc_info=(exc_type, exc_value, exc_traceback))
 
 
@@ -57,7 +57,7 @@ def unraisable_logging(args):
                 Defaults to None
     """
     exc_type, exc_value, exc_traceback, err_msg, _ = args
-    default_msg = "Uncaught exception"
+    default_msg = "Unraisable exception"
 
     logging.error(err_msg or default_msg,
                   exc_info=(exc_type, exc_value, exc_traceback))
