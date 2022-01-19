@@ -12,11 +12,11 @@ def except_logging(exc_type, exc_value, exc_traceback):
         exc_value (Exception) : Exception value
         exc_traceback (traceback): Exception traceback
     """
-    logging.exception("Uncaught exception", exc_info=exc_value)
+    logging.error("Uncaught exception",
+                  exc_info=(exc_type, exc_value, exc_traceback))
 
 
-def threading_except_logging(exc_type, exc_value=None, exc_traceback=None,
-                             thread=None):
+def threading_except_logging(args):
     """
     Log uncaught exceptions from different threads using the root logger. This
     is a function meant to be set as `threading.excepthook` to provide unified
@@ -25,30 +25,39 @@ def threading_except_logging(exc_type, exc_value=None, exc_traceback=None,
     Note: Only supported since Python version 3.8
 
     Args:
-        exc_type (type): Exception type
-        exc_value (Exception): Exception value, can be None. Defaults to None
-        exc_traceback (traceback): Exception traceback, can be None. Defaults
-            to None
-        thread (threading.Thread): Thread which raised the exception, can be
-            None. Defaults to None
+        args (namedtuple):
+            - args.exc_type (type): Exception type
+            - args.exc_value (Exception): Exception value, can be None.
+                Defaults to None
+            - args.exc_traceback (traceback): Exception traceback, can be None.
+                Defaults to None
+            - args.thread (threading.Thread): Thread which raised the
+                exception, can be None. Defaults to None
     """
-    logging.exception("Uncaught threading exception", exc_info=exc_value)
+    exc_type, exc_value, exc_traceback, _ = args
+    logging.error("Uncaught exception",
+                  exc_info=(exc_type, exc_value, exc_traceback))
 
 
-def unraisable_logging(exc_type, exc_value=None, exc_traceback=None,
-                       err_msg=None, object=None):
+def unraisable_logging(args):
     """
     Log unraisable exceptions using the root logger. This is a function meant
     to be set as `sys.unraisablehook` to provide unified logging for regular
     logs and unraisable exceptions.
 
     Args:
-        exc_type (type): Exception type
-        exc_value (Exception): Exception value, can be None. Defaults to None
-        exc_traceback (traceback): Exception traceback, can be None. Defaults
-            to None
-        err_msg (str): Error message, can be None. Defaults to None
-        object (object): Object causing the exception, can be None. Defaults to
-            None
+        args (namedtuple):
+            - args.exc_type (type): Exception type
+            - args.exc_value (Exception): Exception value, can be None.
+                Defaults to None
+            - args.exc_traceback (traceback): Exception traceback, can be None.
+                Defaults to None
+            - args.err_msg (str): Error message, can be None. Defaults to None
+            - args.object (object): Object causing the exception, can be None.
+                Defaults to None
     """
-    logging.exception("Unraisable exception", exc_info=exc_value)
+    exc_type, exc_value, exc_traceback, err_msg, _ = args
+    default_msg = "Uncaught exception"
+
+    logging.error(err_msg or default_msg,
+                  exc_info=(exc_type, exc_value, exc_traceback))
