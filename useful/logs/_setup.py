@@ -51,8 +51,11 @@ def setup(logger=None, path=None, log_level=logging.INFO, json_logging=True,
     Returns:
         logging.Logger: The first argument (logger) after setup.
     """
-    json_fields = json_fields or JSON_FIELDS
-    always_extra = always_extra or ALWAYS_EXTRA
+    if json_fields is None:
+        json_fields = JSON_FIELDS
+    if always_extra is None:
+        always_extra = ALWAYS_EXTRA
+
     if logger is None:
         logger = logging.getLogger()
 
